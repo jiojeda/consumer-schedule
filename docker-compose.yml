@@ -23,3 +23,16 @@ services:
       KAFKA_RESTART_ATTEMPTS: "10"
       KAFKA_RESTART_DELAY: "5"
       ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
+  consumerschedule:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - 3000:3000
+    links:
+      - kafka
+    volumes:
+      - .:/home/app
+    environment:
+      - NODE_ENV=development
+  

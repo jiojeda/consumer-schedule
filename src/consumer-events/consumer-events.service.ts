@@ -1,50 +1,51 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConsumerEventsClient } from './consumer-events.client';
 import { ClientKafka } from '@nestjs/microservices';
 import { XMLParser } from 'fast-xml-parser';
-import { plainToClass } from '@nestjs/class-transformer';
-import { ConsumerEventsDto } from './dto/consumer-events.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ConsumerEventsService {
-    private readonly logger = new Logger(ConsumerEventsService.name);
+  private readonly logger = new Logger(ConsumerEventsService.name);
 
-    constructor(
-        @Inject("KAFKA_SERVICE") private readonly kafkaClient: ClientKafka,
-        private readonly client: ConsumerEventsClient
-    ) {}
+  constructor(
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
+    private readonly client: ConsumerEventsClient,
+  ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
-  async handleCron() {
-    this.logger.debug('Called when the current second is 30');
+  async checkForEvents() {
+    //getting events data from provider
     const events = await this.client.obtainEventsFromProvider();
 
-    const jsonEvents = this.parseXmlEventsToJson(events)
+    // Procesar los datos de eventos a JSON de forma segura
+    const jsonEvents = this.parseXmlEventsToJson(events);
 
-    this.logger.debug('Sending events to Kafka topic');
-    this.logger.debug(JSON.stringify(jsonEvents["output"]));
-    //this.kafkaClient.emit('new-events', { value: JSON.stringify(dtoEvents) });
+    // send events data to queue repository
+    this.kafkaClient.emit('new-events', {
+      value: JSON.stringify(jsonEvents['output']),
+    });
   }
 
   private parseXmlEventsToJson(xml: string) {
     const alwaysArray = [
-        "planList.output.base_plan",
-        "planList.output.base_plan.plan",
-        "planList.output.base_plan.plan.zone"
+      'planList.output.base_plan',
+      'planList.output.base_plan.plan',
+      'planList.output.base_plan.plan.zone',
     ];
 
     const options = {
-      parseAttributeValue: true, 
-      attributeNamePrefix: "",  
+      parseAttributeValue: true,
+      attributeNamePrefix: '',
       ignorePiTags: true,
       ignoreAttributes: false,
-      isArray: (name, jpath, isLeafNode, isAttribute) => { 
-        if( alwaysArray.indexOf(jpath) !== -1) return true;
+      isArray: (name, jpath, isLeafNode, isAttribute) => {
+        if (alwaysArray.indexOf(jpath) !== -1) return true;
         return false;
-      }
+      },
     };
 
+    //transform xml to json object
     const parser = new XMLParser(options);
     const { planList } = parser.parse(xml);
 
