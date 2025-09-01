@@ -13,7 +13,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         transport: Transport.KAFKA,
         options: {
           client: {
-            brokers: ['kafka:29092'],
+            brokers: [process.env.KAFKA_BROKERCONNECT || 'localhost:9092'],
           },
         },
       },

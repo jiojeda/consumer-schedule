@@ -1,0 +1,16 @@
+dist
+image
+
+node_module
+
+mappings
+wiremock*
+
+.*
+docker*
+eslint*
+nest*
+
+README*
+.DS_Store
+

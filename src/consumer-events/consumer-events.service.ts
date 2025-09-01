@@ -15,18 +15,24 @@ export class ConsumerEventsService {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkForEvents() {
-    //getting events data from provider
-    const events = await this.client.obtainEventsFromProvider();
+    try {
+      //getting events data from provider
+      const events = await this.client.obtainEventsFromProvider();
 
-    // Procesar los datos de eventos a JSON de forma segura
-    const jsonEvents = this.parseXmlEventsToJson(events);
+      // Procesar los datos de eventos a JSON de forma segura
+      const jsonEvents = this.parseXmlEventsToJson(events);
 
-    // send events data to queue repository
-    this.kafkaClient.emit('new-events', {
-      value: JSON.stringify(jsonEvents['output']),
-    });
+      // send events data to queue repository
+      this.kafkaClient.emit('new-events', {
+        value: JSON.stringify(jsonEvents['output']),
+      });
+      this.logger.debug('data sent to queue');
+    } catch (error) {
+      this.logger.error(
+        error.message ? error.message : 'internal server error',
+      );
+    }
   }
-
   private parseXmlEventsToJson(xml: string) {
     const alwaysArray = [
       'planList.output.base_plan',

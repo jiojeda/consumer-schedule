@@ -25,7 +25,19 @@
 ## Project setup
 
 ```bash
+$ git clone <>
+
+#start kafka and mongodb
+$ docker compose up 
+
+$ cd consumer-events
+
+#install dependencies
 $ npm install
+
+# start consume app
+$ npm run start:dev
+
 ```
 
 ## Compile and run the project

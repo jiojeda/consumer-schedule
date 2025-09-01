@@ -23,3 +23,18 @@ services:
       KAFKA_RESTART_ATTEMPTS: "10"
       KAFKA_RESTART_DELAY: "5"
       ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
+  consumer:
+    image: consumer
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    links:
+      - kafka
+    volumes:
+      - .:/home/app/consumer
+    environment:
+      NODE_ENV: "development"
+      KAFKA_BROKERCONNECT: "kafka:29092"
+  
